@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
 
 const apiHost = window.location.hostname || 'localhost'
-const API_URL = import.meta.env.VITE_API_URL || `http://${apiHost}:5000/api`
+const BASE_URL = import.meta.env.VITE_API_URL || `http://${apiHost}:5000`
+const API_URL = `${BASE_URL}/api`
 const API_HEALTH_URL = `${API_URL.replace(/\/api$/, '')}/api/health`
 const AUTH_STORAGE_KEY = 'cafelio-auth'
 const THEME_STORAGE_KEY = 'cafelio-theme'
