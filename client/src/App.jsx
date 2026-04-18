@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import './App.css'
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const apiHost = window.location.hostname || 'localhost'
 const BASE_URL = import.meta.env.VITE_API_URL || `http://${apiHost}:5000`
@@ -419,7 +421,41 @@ function App() {
       setCitySuggestions([])
     }
   }
+  useEffect(() => {
+  if (!center) return;
 
+  const mapContainer = document.getElementById("map");
+  if (!mapContainer) return;
+
+  // prevent duplicate maps
+  if (mapContainer._leaflet_id) {
+    mapContainer._leaflet_id = null;
+  }
+
+  const map = L.map("map").setView([center.lat, center.lng], 14);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  // center marker
+  L.marker([center.lat, center.lng])
+    .addTo(map)
+    .bindPopup(center.label || "Selected location");
+
+  // cafes
+  cafes.forEach((cafe) => {
+    if (cafe.lat && cafe.lng) {
+      L.marker([cafe.lat, cafe.lng])
+        .addTo(map)
+        .bindPopup(`<b>${cafe.name}</b>`);
+    }
+  });
+
+  return () => {
+    map.remove();
+  };
+}, [center, cafes]);
   useEffect(() => {
     let ignore = false
 
@@ -745,26 +781,25 @@ function App() {
           </div>
         </div>
 
-        <div className="map-area google-map-area" aria-label="Google map">
-          <iframe
-            className="google-map"
-            title="Google map preview"
-            src={googleEmbedUrl(selectedCafe || center)}
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          ></iframe>
-          <div className="map-overlay">
-            <p className="eyebrow">Google Maps</p>
-            <h2>{selectedCafe?.name || center.label}</h2>
-            <button
-              className="primary"
-              type="button"
-              onClick={() => openGoogleMaps(selectedCafe || { ...center, name: center.label })}
-            >
-              Open in Google Maps
-            </button>
-          </div>
-        </div>
+        <div className="map-area" style={{ height: "400px" }}>
+  <div id="map" style={{ height: "100%", width: "100%", borderRadius: "12px" }}></div>
+
+  <div className="map-overlay">
+    <p className="eyebrow">OpenStreetMap</p>
+    <h2>{selectedCafe?.name || center.label}</h2>
+    <button
+      className="primary"
+      onClick={() =>
+        window.open(
+          `https://www.openstreetmap.org/?mlat=${center.lat}&mlon=${center.lng}`,
+          "_blank"
+        )
+      }
+    >
+      Open in Maps
+    </button>
+  </div>
+</div>
       </section>
 
       <section className="results-section" id="results">
